@@ -1,7 +1,8 @@
-import hashlib
+import hashlib #makes hashes for us
 import json
 from time import time
-from uuid import uuid4
+from uuid import uuid4 #universally unique identifier 
+
 
 from flask import Flask, jsonify, request
 
