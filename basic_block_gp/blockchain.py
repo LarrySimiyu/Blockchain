@@ -1,7 +1,8 @@
-import hashlib
+import hashlib #makes hashes for us
 import json
 from time import time
-from uuid import uuid4
+from uuid import uuid4 #universally unique identifier 
+
 
 from flask import Flask, jsonify, request
 
@@ -29,15 +30,23 @@ class Blockchain(object):
         :param previous_hash: (Optional) <str> Hash of previous Block
         :return: <dict> New Block
         """
-
+#block is a python dictionary
+#35
         block = {
             # TODO
+            'index': len(self.chain) + 1, # anytime you are making a new index - index of the very first block in blockchain is usually 1
+            'timestamp': time(),
+            'transactions': self.current_transactions,
+            'proof': proof,
+            'previous_hash': previous_hash or self.hash(self.chain[-1])
         }
 
         # Reset the current list of transactions
+        self.current_transactions = []
         # Append the chain to the block
+        self.chain.append(block)
         # Return the new block
-        pass
+        return block
 
     def hash(block):
         """
@@ -55,9 +64,13 @@ class Blockchain(object):
         # We must make sure that the Dictionary is Ordered,
         # or we'll have inconsistent hashes
 
-        # TODO: Create the block_string
+        # TODO: Create the block_string #40min
+        block_string = json.dumps(block, sort_keys=True).encode() #.dumps stringifies for python - 
+        #.encode python string has a wrapper of matadata around it preventing it from being hashed - this turns it from python string to a byte string sort_keyswe can use our hash function
 
         # TODO: Hash this string using sha256
+        hash = hashlib.sha256(block_string).hexdigest() #.hexdigetst gives back string of hexadecimal
+        #sha256 requires a byte object 
 
         # By itself, the sha256 function returns the hash in a raw string
         # that will likely include escaped characters.
@@ -66,13 +79,14 @@ class Blockchain(object):
         # easier to work with and understand
 
         # TODO: Return the hashed block string in hexadecimal format
-        pass
+        return hash
 
-    @property
+    @property # what does this do 
+
     def last_block(self):
         return self.chain[-1]
 
-    def proof_of_work(self, block):
+    def proof_of_work(self, block): #
         """
         Simple Proof of Work Algorithm
         Stringify the block and look for a proof.
