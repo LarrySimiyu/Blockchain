@@ -7,6 +7,8 @@ from uuid import uuid4 #universally unique identifier
 from flask import Flask, jsonify, request
 
 
+DIFFICULTY = 3 #1:10:00
+
 class Blockchain(object):
     def __init__(self):
         self.chain = []
@@ -14,6 +16,9 @@ class Blockchain(object):
 
         # Create the genesis block
         self.new_block(previous_hash=1, proof=100)
+        # previous_hash is 1 because 
+            # - 1 is very different than the type of data you would expect to find
+            # - clearly not generated normaly 
 
     def new_block(self, proof, previous_hash=None):
         """
@@ -48,7 +53,7 @@ class Blockchain(object):
         # Return the new block
         return block
 
-    def hash(block):
+    def hash(self, block):
         """
         Creates a SHA-256 hash of a Block
 
@@ -94,11 +99,15 @@ class Blockchain(object):
         in an effort to find a number that is a valid proof
         :return: A valid proof for the provided block
         """
-        # TODO
-        pass
-        # return proof
+        block_string = json.dumps(self.last_block, sort_keys=True)
+        proof = 0
+        while self.valid_proof(block_string, proof) is False:
+            proof += 1
 
-    @staticmethod
+        return proof
+    
+
+    @staticmethod #does not have self on purpose because it does not have self
     def valid_proof(block_string, proof):
         """
         Validates the Proof:  Does hash(block_string, proof) contain 3
@@ -111,8 +120,11 @@ class Blockchain(object):
         :return: True if the resulting hash is a valid proof, False otherwise
         """
         # TODO
-        pass
-        # return True or False
+
+        guess = f'{block_string}{proof}'.encode()  #encode makes it hashable
+        guess_hash = hashlib.sha3_256(guess).hexdigest#turns it into hexidecimal string
+
+        return guess_hash[:DIFFICULTY] == "0" * DIFFICULTY # which is just meaning === "000"
 
 
 # Instantiate our Node
@@ -128,11 +140,14 @@ blockchain = Blockchain()
 @app.route('/mine', methods=['GET'])
 def mine():
     # Run the proof of work algorithm to get the next proof
+    proof = blockchain.proof_of_work(blockchain.last_block)
 
     # Forge the new Block by adding it to the chain with the proof
-
+    previous_hash = blockchain.hash(blockchain.last_block)
+    new_block =  blockchain.new_block(proof, previous_hash)
     response = {
         # TODO: Send a JSON response with the new block
+        'block': new_block
     }
 
     return jsonify(response), 200
@@ -142,6 +157,8 @@ def mine():
 def full_chain():
     response = {
         # TODO: Return the chain and its current length
+        'length': len(blockchain.chain),  #1 hour mark
+        'chain': blockchain.chain
     }
     return jsonify(response), 200
 
